@@ -50,13 +50,33 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static uint8_t dataRcvd;
+static uint8_t mode;
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+    if(huart==&huart1)
+    {
+        if(dataRcvd=='1')
+        {
+            mode=2;
+        }
+        else if(dataRcvd=='2')
+        {
+            mode=4;
+        }
+        else if(dataRcvd=='3')
+        {
+            mode=8;
+        }
 
+        HAL_UART_Receive_IT(&huart1,&dataRcvd,1);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -93,20 +113,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
     HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
 
-    //HAL_TIMEx_PWMN_Start(&htim1,TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+    HAL_UART_Receive_IT(&huart1,&dataRcvd,1);
   while (1)
   {
-      uint8_t dataRcvd;
-
-      HAL_UART_Receive(&huart1,&dataRcvd,1,0);
 
       float t=HAL_GetTick()*0.001;
 
-      float duty=0.5*sin(dataRcvd*3.14*t)+0.5;
+      float duty=0.5*sin(mode*3.14*t)+0.5;
 
       uint16_t arr= __HAL_TIM_GET_AUTORELOAD(&htim1);
 
